@@ -8,9 +8,17 @@
 2. Run ``pip3 install -r requirements.txt`` in the repo folder
 
 ## Usage
-1. Head over to [MangaLife.us](https://mangalife.us/) and find yourself an interessting manga
-2. Go to the mainpage of the manga (looking like this ``https://mangalife.us/manga/Onepunch-Man``)
-3. copy the last part (here: Onepunch-Man)
-4. Execute ``python MangaFetcher.py [Copied Manga Name]``
-5. ...
-6. Profit!
+```
+usage: MangaFetcher.py [-h] [-m] [-e] manga
+
+positional arguments:
+  manga       manga to download from https://mangalife.us/. Example:
+              https://mangalife.us/manga/Onepunch-Man -> Onepunch-Man
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -m, --mobi  If set, a MOBI E-Book of the manga will be exported at the end
+              (can be set together with --epub)
+  -e, --epub  If set, a EPUB E-Book of the manga will be exported at the end
+              (can be set together with --mobi)
+```

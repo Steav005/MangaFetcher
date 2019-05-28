@@ -2,3 +2,4 @@ kindlecomicconverter
 bs4
 futures
 requests
+argparse

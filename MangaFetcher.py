@@ -5,59 +5,88 @@ from bs4 import BeautifulSoup
 import requests
 import sys
 import time
+import argparse
+import traceback
 
-started = int(0)
-finished = int(0)
-manga = sys.argv[1]
-html_stem = "https://mangalife.us"
-manga_prefix = "/manga/"
-read_prefix = "/read-online/"
-chapter_list_class = "list chapter-list"
-page_select_class = "PageSelect"
-image_class = "CurImage"
-chapter_prefix = "-chapter-"
-page_prefix = "-page-"
-html_suffix = ".html"
 
-title_class = "SeriesName" #h1
-manga_name = ""
+def set_args():
+    global args
+    parser = argparse.ArgumentParser()
+    parser.add_argument("manga", help="manga to download from https://mangalife.us/. Example: https://mangalife.us/manga/Onepunch-Man -> Onepunch-Man")
+    parser.add_argument("-m", "--mobi", help='If set, a MOBI E-Book of the manga will be exported at the end (can be set together with --epub)', action="store_true")
+    parser.add_argument("-e", "--epub", help='If set, a EPUB E-Book of the manga will be exported at the end (can be set together with --mobi)', action="store_true")
+    args = parser.parse_args()
 
-executor = ThreadPoolExecutor(20)
-printer = ThreadPoolExecutor(1)
-
-if not os.path.exists(manga):
-    os.makedirs(manga)
 
 def print_t(t):
-    print(t)
+    print(t + "\n")
+
 
 def increaseStarted():
     global started
     started += 1
-    print("Pages " + str(finished) + "/" + str(started))
+    sys.stdout.write("\r" + "Pages " + str(finished) + "/" + str(started))
+    sys.stdout.flush()
+
 
 def increaseFinished():
     global finished
     finished += 1
-    print("Pages " + str(finished) + "/" + str(started))
+    sys.stdout.write("\r" + "Pages " + str(finished) + "/" + str(started))
+    sys.stdout.flush()
 
 
 def initialize():
+    global started
+    global finished
+    global manga
+    global html_stem
+    global manga_prefix
+    global read_prefix
+    global chapter_list_class
+    global page_select_class
+    global image_class
+    global chapter_prefix
+    global page_prefix
+    global html_suffix
+    global manga_name
+
+    set_args()
+
+    started = int(0)
+    finished = int(0)
+    manga = args.manga
+    html_stem = "https://mangalife.us"
+    manga_prefix = "/manga/"
+    read_prefix = "/read-online/"
+    chapter_list_class = "list chapter-list"
+    page_select_class = "PageSelect"
+    image_class = "CurImage"
+    chapter_prefix = "-chapter-"
+    page_prefix = "-page-"
+    html_suffix = ".html"
+
+    title_class = "SeriesName"  # h1
+    manga_name = ""
+
+    if not os.path.exists(manga):
+        os.makedirs(manga)
+
     url = html_stem + manga_prefix + manga
     html = requests.get(url, timeout=60).content
-    mainpage = BeautifulSoup(html)
-    global manga_name
+    mainpage = BeautifulSoup(html, "lxml")
     manga_name = mainpage.find('h1', {"class": title_class}).text
-    print(manga_name)
+    print(manga_name + "\n")
     chapter = mainpage.find_all('a', href=True, chapter=True)
     for c in chapter:
-        executor.submit(getChapter, c['chapter'], c['href'])
+        futures.append(executor.submit(getChapter, c['chapter'], c['href']))
+
 
 def getChapter(chapter, href):
     try:
         url = html_stem + href
         html = requests.get(url, timeout=60).content
-        chapter_page = BeautifulSoup(html)
+        chapter_page = BeautifulSoup(html, "lxml")
         pages_select = chapter_page.find('select', {"class": page_select_class})
         pages = pages_select.find_all('option', value=True)
 
@@ -66,9 +95,10 @@ def getChapter(chapter, href):
             os.makedirs(folder)
 
         for p in pages:
-            executor.submit(getPage, chapter, p['value'])
+            futures.append(executor.submit(getPage, chapter, p['value']))
             printer.submit(increaseStarted)
     except:
+        print(print_t, traceback.format_exc())
         printer.submit(print_t, "Error fetching Chapter " + chapter)
 
 
@@ -81,35 +111,52 @@ def getPage(chapter, page):
     try:
         url = html_stem + read_prefix + manga + chapter_prefix + chapter + page_prefix + page + html_suffix
         html = requests.get(url, timeout=60).content
-        page_soup = BeautifulSoup(html)
+        page_soup = BeautifulSoup(html, "lxml")
         image_url = page_soup.find("img", {"class": image_class}, src=True)['src']
-        image_stream = requests.get(image_url, stream=True)
+        image_stream = requests.get(image_url, stream=True, timeout=60)
         with open(file, 'wb') as out_file:
             shutil.copyfileobj(image_stream.raw, out_file)
     except:
+        print(print_t, traceback.format_exc())
         printer.submit(print_t, "Error fetching Chapter " + chapter + " Page " + page)
-
-    #ConvertGrayToPNG8(file)
 
     printer.submit(increaseFinished)
 
+
 if __name__ == "__main__":
+    global executor
+    global printer
+    global futures
+
+    executor = ThreadPoolExecutor(20)
+    printer = ThreadPoolExecutor(1)
+    futures = []
+
     initialize()
 
     while(1):
-        if executor._work_queue.empty():
+        futures[0].result()
+        futures.pop(0)
+
+        if futures.__len__() == 0 :
             break
 
-        time.sleep(2)
+    if not args.mobi:
+        if not args.epub:
+            sys.exit()
 
-    manga_args = ['--hq', '--upscale', '--format=EPUB', '--batchsplit=0', '--title', manga_name, manga]
+    ebook = []
+    print("")
+
+    if args.mobi:
+        ebook.append(['--hq', '--upscale', '--format=MOBI', '--batchsplit=0', '--title', manga_name, manga])
+    if args.epub:
+        ebook.append(['--hq', '--upscale', '--format=EPUB', '--batchsplit=0', '--title', manga_name, manga])
 
     from kindlecomicconverter.comic2ebook import main as manga2ebook
     from multiprocessing import freeze_support
 
     freeze_support()
-    manga2ebook(manga_args)
 
-
-
-
+    for e in ebook:
+        manga2ebook(e)
