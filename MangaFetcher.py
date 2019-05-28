@@ -75,7 +75,12 @@ def initialize():
     url = html_stem + manga_prefix + manga
     html = requests.get(url, timeout=60).content
     mainpage = BeautifulSoup(html, "lxml")
-    manga_name = mainpage.find('h1', {"class": title_class}).text
+    page_title = mainpage.find('h1', {"class": title_class})
+    if page_title is None:
+        print("Could not find the Manga\nMake sure you look for a manga on https://mangalife.us\nIf you find a Manga go to the title Page of the Manga\nExample: https://mangalife.us/manga/Onepunch-Man\nThen use the last part of the URL as the manga parameter\nIn the Example: Onepunch-Man")
+        sys.exit()
+
+    manga_name = page_title.text
     print(manga_name + "\n")
     chapter = mainpage.find_all('a', href=True, chapter=True)
     for c in chapter:
