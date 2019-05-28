@@ -103,7 +103,6 @@ def getChapter(chapter, href):
             futures.append(executor.submit(getPage, chapter, p['value']))
             printer.submit(increaseStarted)
     except:
-        print(print_t, traceback.format_exc())
         printer.submit(print_t, "Error fetching Chapter " + chapter)
 
 
@@ -122,7 +121,6 @@ def getPage(chapter, page):
         with open(file, 'wb') as out_file:
             shutil.copyfileobj(image_stream.raw, out_file)
     except:
-        print(print_t, traceback.format_exc())
         printer.submit(print_t, "Error fetching Chapter " + chapter + " Page " + page)
 
     printer.submit(increaseFinished)
