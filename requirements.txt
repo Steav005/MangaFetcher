@@ -1,3 +1,4 @@
 kindlecomicconverter
 bs4
 futures
+requests
