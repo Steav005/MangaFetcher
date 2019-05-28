@@ -69,9 +69,6 @@ def initialize():
     title_class = "SeriesName"  # h1
     manga_name = ""
 
-    if not os.path.exists(manga):
-        os.makedirs(manga)
-
     url = html_stem + manga_prefix + manga
     html = requests.get(url, timeout=60).content
     mainpage = BeautifulSoup(html, "lxml")
@@ -79,6 +76,9 @@ def initialize():
     if page_title is None:
         print("Could not find the Manga\nMake sure you look for a manga on https://mangalife.us\nIf you find a Manga go to the title Page of the Manga\nExample: https://mangalife.us/manga/Onepunch-Man\nThen use the last part of the URL as the manga parameter\nIn the Example: Onepunch-Man")
         sys.exit()
+
+    if not os.path.exists(manga):
+        os.makedirs(manga)
 
     manga_name = page_title.text
     print(manga_name + "\n")
