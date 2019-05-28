@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
         time.sleep(2)
 
-    manga_args = ['--output', manga, '--hq', '--format=EPUB', '--batchsplit=0', '--title', manga_name, manga]
+    manga_args = ['--hq', '--upscale', '--format=EPUB', '--batchsplit=0', '--title', manga_name, manga]
 
     from kindlecomicconverter.comic2ebook import main as manga2ebook
     from multiprocessing import freeze_support
