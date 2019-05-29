@@ -19,7 +19,9 @@ positional arguments:
 optional arguments:
   -h, --help  show this help message and exit
   -m, --mobi  If set, a MOBI E-Book of the manga will be exported at the end
-              (can be set together with --epub)
+              (can be set together with --epub) NEEDS KindleGen to be
+              installed!
+              https://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211
   -e, --epub  If set, a EPUB E-Book of the manga will be exported at the end
               (can be set together with --mobi)
 ```
