@@ -1,5 +1,6 @@
 kindlecomicconverter
 bs4
+lxml
 futures
 requests
 argparse
