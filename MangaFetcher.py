@@ -6,7 +6,6 @@ import requests
 import sys
 import time
 import argparse
-import traceback
 
 
 def set_args():
