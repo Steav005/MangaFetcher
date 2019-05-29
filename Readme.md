@@ -2,6 +2,7 @@
 
 ## Prerequirements
 - Python 3
+- (Optional for MOBI export) [KindleGen](https://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211) 
 
 ## Installation
 1. Get yourself the repo

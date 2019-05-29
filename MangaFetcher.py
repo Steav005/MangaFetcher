@@ -11,8 +11,8 @@ import argparse
 def set_args():
     global args
     parser = argparse.ArgumentParser()
-    parser.add_argument("manga", help="manga to download from https://mangalife.us/. Example: https://mangalife.us/manga/Onepunch-Man -> Onepunch-Man")
-    parser.add_argument("-m", "--mobi", help='If set, a MOBI E-Book of the manga will be exported at the end (can be set together with --epub)', action="store_true")
+    parser.add_argument("manga", help="manga to download from https://mangalife.us/.\nExample: https://mangalife.us/manga/Onepunch-Man -> Onepunch-Man")
+    parser.add_argument("-m", "--mobi", help='If set, a MOBI E-Book of the manga will be exported at the end (can be set together with --epub)\nNEEDS KindleGen to be installed!\nhttps://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211', action="store_true")
     parser.add_argument("-e", "--epub", help='If set, a EPUB E-Book of the manga will be exported at the end (can be set together with --mobi)', action="store_true")
     args = parser.parse_args()
 
