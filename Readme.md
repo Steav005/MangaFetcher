@@ -33,5 +33,5 @@ optional arguments:
 
 ```
 
-###Example
+### Example
 ``python MangaFetcher.py -s 15 -e 32 -m Onepunch-Man``
