@@ -1,6 +1,15 @@
-
+﻿
 # Created by https://www.gitignore.io/api/python
 # Edit at https://www.gitignore.io/?templates=python
+
+##Idea folder##
+.idea/*
+
+##Downloaded and Converted Files##
+*.jpg
+*.png
+*.mobi
+*.epub
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
