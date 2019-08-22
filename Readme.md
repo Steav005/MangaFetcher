@@ -10,8 +10,7 @@
 
 ## Usage
 ```
-usage: MangaFetcher.py [-h] [-sc STARTCHAPTER] [-ec ENDCHAPTER] [-m] [-e] [-o]
-                       manga
+usage: MangaFetcher.py [-h] [-s START] [-e END] [-m] [-p] [-o] manga
 
 positional arguments:
   manga                 manga to download from https://mangalife.us/. Example:
@@ -20,17 +19,21 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -sc STARTCHAPTER, --startChapter STARTCHAPTER
-                        Specifies the Chapter to start from (included)
-  -ec ENDCHAPTER, --endChapter ENDCHAPTER
-                        Specifies the Chapter to end on (included)
+  -s START, --start START
+                        (Default: 1) Sets the first chapter. (Decimal with
+                        Point .)
+  -e END, --end END     (Default is the last Chapter) Sets the last chapter
+                        (inclusive) (Decimal with Point)
   -m, --mobi            If set, a MOBI E-Book of the manga will be exported at
                         the end (can be set together with --epub) NEEDS
                         KindleGen to be installed! https://www.amazon.com/gp/f
                         eature.html?ie=UTF8&docId=1000765211
-  -e, --epub            If set, a EPUB E-Book of the manga will be exported at
+  -p, --epub            If set, a EPUB E-Book of the manga will be exported at
                         the end (can be set together with --mobi)
   -o, --override        If set, removes corrupted Images after the download
                         (no attempted redownload) Might help with generation
                         of E-Books that contain corrupted uploaded images
 ```
+
+### Example
+``python MangaFetcher.py -s 15 -e 32 -m Onepunch-Man``

@@ -7,6 +7,7 @@ import requests
 import sys
 import argparse
 from PIL import Image
+import math
 
 
 def set_args():
@@ -14,14 +15,10 @@ def set_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("manga",
                         help="manga to download from https://mangalife.us/.\nExample: https://mangalife.us/manga/Onepunch-Man -> Onepunch-Man")
-    parser.add_argument("-sc", "--startChapter", help='Specifies the Chapter to start from (included)', type=int)
-    parser.add_argument("-ec", "--endChapter", help='Specifies the Chapter to end on (included)', type=int)
-    parser.add_argument("-m", "--mobi",
-                        help='If set, a MOBI E-Book of the manga will be exported at the end (can be set together with --epub)\nNEEDS KindleGen to be installed!\nhttps://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211',
-                        action="store_true")
-    parser.add_argument("-e", "--epub",
-                        help='If set, a EPUB E-Book of the manga will be exported at the end (can be set together with --mobi)',
-                        action="store_true")
+    parser.add_argument("-s", "--start", help='(Default: 1)\n Sets the first chapter. \n (Decimal with Point .)')
+    parser.add_argument("-e", "--end", help='(Default is the last Chapter)\n Sets the last chapter (inclusive)\n (Decimal with Point)')
+    parser.add_argument("-m", "--mobi", help='If set, a MOBI E-Book of the manga will be exported at the end (can be set together with --epub)\nNEEDS KindleGen to be installed!\nhttps://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211', action="store_true")
+    parser.add_argument("-p", "--epub", help='If set, a EPUB E-Book of the manga will be exported at the end (can be set together with --mobi)', action="store_true")
     parser.add_argument("-o", "--override",
                         help="If set, removes corrupted Images after the download (no attempted redownload)\nMight help with generation of E-Books that contain corrupted uploaded images",
                         action="store_true")
@@ -60,6 +57,8 @@ def initialize():
     global page_prefix
     global html_suffix
     global manga_name
+    global start_chapter
+    global end_chapter
 
     set_args()
 
@@ -75,6 +74,20 @@ def initialize():
     chapter_prefix = "-chapter-"
     page_prefix = "-page-"
     html_suffix = ".html"
+
+    try:
+        start_chapter = float(args.start)
+        if start_chapter is None:
+            start_chapter = 0
+    except Exception:
+        start_chapter = 0
+
+    try:
+        end_chapter = float(args.end)
+        if end_chapter is None:
+            end_chapter = math.inf
+    except Exception:
+        end_chapter = math.inf
 
     title_class = "SeriesName"  # h1
     manga_name = ""
@@ -95,16 +108,13 @@ def initialize():
     print(manga_name + "\n")
     chapter = mainpage.find_all('a', href=True, chapter=True)
     for c in chapter:
+        number = float(c['chapter'])
+        if number < start_chapter or number > end_chapter:
+            continue
         futures.append(executor.submit(getChapter, c['chapter'], c['href']))
 
 
 def getChapter(chapter, href):
-    if args.startChapter is not None:
-        if args.startChapter > chapter:
-            return
-    if args.endChapter is not None:
-        if args.endChapter < chapter:
-            return
     try:
         url = html_stem + href
         html = requests.get(url, timeout=60).content
