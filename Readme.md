@@ -10,18 +10,27 @@
 
 ## Usage
 ```
-usage: MangaFetcher.py [-h] [-m] [-e] manga
+usage: MangaFetcher.py [-h] [-sc STARTCHAPTER] [-ec ENDCHAPTER] [-m] [-e] [-o]
+                       manga
 
 positional arguments:
-  manga       manga to download from https://mangalife.us/. Example:
-              https://mangalife.us/manga/Onepunch-Man -> Onepunch-Man
+  manga                 manga to download from https://mangalife.us/. Example:
+                        https://mangalife.us/manga/Onepunch-Man -> Onepunch-
+                        Man
 
 optional arguments:
-  -h, --help  show this help message and exit
-  -m, --mobi  If set, a MOBI E-Book of the manga will be exported at the end
-              (can be set together with --epub) NEEDS KindleGen to be
-              installed!
-              https://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211
-  -e, --epub  If set, a EPUB E-Book of the manga will be exported at the end
-              (can be set together with --mobi)
+  -h, --help            show this help message and exit
+  -sc STARTCHAPTER, --startChapter STARTCHAPTER
+                        Specifies the Chapter to start from (included)
+  -ec ENDCHAPTER, --endChapter ENDCHAPTER
+                        Specifies the Chapter to end on (included)
+  -m, --mobi            If set, a MOBI E-Book of the manga will be exported at
+                        the end (can be set together with --epub) NEEDS
+                        KindleGen to be installed! https://www.amazon.com/gp/f
+                        eature.html?ie=UTF8&docId=1000765211
+  -e, --epub            If set, a EPUB E-Book of the manga will be exported at
+                        the end (can be set together with --mobi)
+  -o, --override        If set, removes corrupted Images after the download
+                        (no attempted redownload) Might help with generation
+                        of E-Books that contain corrupted uploaded images
 ```

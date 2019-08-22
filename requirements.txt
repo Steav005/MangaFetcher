@@ -4,3 +4,4 @@ lxml
 futures
 requests
 argparse
+pillow

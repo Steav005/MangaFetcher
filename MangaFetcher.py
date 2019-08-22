@@ -1,19 +1,30 @@
 import os
 from concurrent.futures import ThreadPoolExecutor
+import concurrent.futures.thread as thread
 import shutil
 from bs4 import BeautifulSoup
 import requests
 import sys
-import time
 import argparse
+from PIL import Image
 
 
 def set_args():
     global args
     parser = argparse.ArgumentParser()
-    parser.add_argument("manga", help="manga to download from https://mangalife.us/.\nExample: https://mangalife.us/manga/Onepunch-Man -> Onepunch-Man")
-    parser.add_argument("-m", "--mobi", help='If set, a MOBI E-Book of the manga will be exported at the end (can be set together with --epub)\nNEEDS KindleGen to be installed!\nhttps://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211', action="store_true")
-    parser.add_argument("-e", "--epub", help='If set, a EPUB E-Book of the manga will be exported at the end (can be set together with --mobi)', action="store_true")
+    parser.add_argument("manga",
+                        help="manga to download from https://mangalife.us/.\nExample: https://mangalife.us/manga/Onepunch-Man -> Onepunch-Man")
+    parser.add_argument("-sc", "--startChapter", help='Specifies the Chapter to start from (included)', type=int)
+    parser.add_argument("-ec", "--endChapter", help='Specifies the Chapter to end on (included)', type=int)
+    parser.add_argument("-m", "--mobi",
+                        help='If set, a MOBI E-Book of the manga will be exported at the end (can be set together with --epub)\nNEEDS KindleGen to be installed!\nhttps://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211',
+                        action="store_true")
+    parser.add_argument("-e", "--epub",
+                        help='If set, a EPUB E-Book of the manga will be exported at the end (can be set together with --mobi)',
+                        action="store_true")
+    parser.add_argument("-o", "--override",
+                        help="If set, removes corrupted Images after the download (no attempted redownload)\nMight help with generation of E-Books that contain corrupted uploaded images",
+                        action="store_true")
     args = parser.parse_args()
 
 
@@ -73,7 +84,8 @@ def initialize():
     mainpage = BeautifulSoup(html, "lxml")
     page_title = mainpage.find('h1', {"class": title_class})
     if page_title is None:
-        print("Could not find the Manga\nMake sure you look for a manga on https://mangalife.us\nIf you find a Manga go to the title Page of the Manga\nExample: https://mangalife.us/manga/Onepunch-Man\nThen use the last part of the URL as the manga parameter\nIn the Example: Onepunch-Man")
+        print(
+            "Could not find the Manga\nMake sure you look for a manga on https://mangalife.us\nIf you find a Manga go to the title Page of the Manga\nExample: https://mangalife.us/manga/Onepunch-Man\nThen use the last part of the URL as the manga parameter\nIn the Example: Onepunch-Man")
         sys.exit()
 
     if not os.path.exists(manga):
@@ -87,6 +99,12 @@ def initialize():
 
 
 def getChapter(chapter, href):
+    if args.startChapter is not None:
+        if args.startChapter > chapter:
+            return
+    if args.endChapter is not None:
+        if args.endChapter < chapter:
+            return
     try:
         url = html_stem + href
         html = requests.get(url, timeout=60).content
@@ -105,8 +123,20 @@ def getChapter(chapter, href):
         printer.submit(print_t, "Error fetching Chapter " + chapter)
 
 
+def removeImageIfCorrupted(path):
+    try:
+        img = Image.open(path)
+        img.verify()
+    except FileNotFoundError:
+        return
+    except:
+        os.remove(path)
+
+
 def getPage(chapter, page):
     file = manga + "/Chapter" + chapter + "/Page" + page + ".png"
+
+    removeImageIfCorrupted(file)
     if os.path.exists(file):
         printer.submit(increaseFinished)
         return
@@ -122,43 +152,52 @@ def getPage(chapter, page):
     except:
         printer.submit(print_t, "Error fetching Chapter " + chapter + " Page " + page)
 
+    if args.override:
+        removeImageIfCorrupted(file)
     printer.submit(increaseFinished)
 
 
 if __name__ == "__main__":
-    global executor
-    global printer
-    global futures
+    try:
+        global executor
+        global printer
+        global futures
 
-    executor = ThreadPoolExecutor(20)
-    printer = ThreadPoolExecutor(1)
-    futures = []
+        executor = ThreadPoolExecutor(20)
+        printer = ThreadPoolExecutor(1)
+        futures = []
 
-    initialize()
+        initialize()
 
-    while(1):
-        futures[0].result()
-        futures.pop(0)
+        while (1):
+            futures[0].result()
+            futures.pop(0)
 
-        if futures.__len__() == 0 :
-            break
+            if futures.__len__() == 0:
+                break
 
-    if not args.mobi:
-        if not args.epub:
-            sys.exit()
+        if not args.mobi:
+            if not args.epub:
+                sys.exit()
 
-    ebook = []
-    print("")
+        ebook = []
+        print("")
 
-    if args.mobi:
-        ebook.append(['--hq', '--upscale', '--format=MOBI', '--batchsplit=0', '--title', manga_name, manga])
-    if args.epub:
-        ebook.append(['--hq', '--upscale', '--format=EPUB', '--batchsplit=0', '--title', manga_name, manga])
+        if args.mobi:
+            ebook.append(['--hq', '--upscale', '--format=MOBI', '--batchsplit=0', '--title', manga_name, manga])
+        if args.epub:
+            ebook.append(['--hq', '--upscale', '--format=EPUB', '--batchsplit=0', '--title', manga_name, manga])
 
-    from kindlecomicconverter.comic2ebook import main as manga2ebook
-    from multiprocessing import freeze_support
+        from kindlecomicconverter.comic2ebook import main as manga2ebook
+        from multiprocessing import freeze_support
 
-    freeze_support()
+        freeze_support()
 
-    for e in ebook:
-        manga2ebook(e)
+        for e in ebook:
+            manga2ebook(e)
+    except KeyboardInterrupt:
+        printer._threads.clear()
+        executor._threads.clear()
+        thread._threads_queues.clear()
+        print("\nInterrupted Fetching\nExiting now!")
+        sys.exit()
