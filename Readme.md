@@ -5,8 +5,9 @@
 - (Optional for MOBI export) [KindleGen](https://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211) 
 
 ## Installation
-1. Get yourself the repo
-2. Run ``pip3 install -r requirements.txt`` in the repo folder
+1. Download the Repository
+2. Run ``pip3 install -r requirements.txt`` in the repository folder
+3. (Optional for MOBI export) place ``kindlegen.exe`` next to ``MangaFetcher.py``
 
 ## Usage
 ```
