@@ -8,6 +8,7 @@ import sys
 import argparse
 from PIL import Image
 import math
+import re
 
 
 def set_args():
@@ -54,6 +55,7 @@ def initialize():
     global page_select_class
     global image_class
     global chapter_prefix
+    global index_prefix
     global page_prefix
     global html_suffix
     global manga_name
@@ -72,6 +74,7 @@ def initialize():
     page_select_class = "PageSelect"
     image_class = "CurImage"
     chapter_prefix = "-chapter-"
+    index_prefix = "-index-"
     page_prefix = "-page-"
     html_suffix = ".html"
 
@@ -122,29 +125,41 @@ def getChapter(chapter, href):
         pages_select = chapter_page.find('select', {"class": page_select_class})
         pages = pages_select.find_all('option', value=True)
 
+        index = -1
+        result = re.search(index_prefix + '(.*)' + page_prefix , url)
+        try:
+            index = int(result.group(1))
+        except:
+            index = -1
+
         folder = manga + "/Chapter" + chapter
         if not os.path.exists(folder):
             os.makedirs(folder)
 
         for p in pages:
-            futures.append(executor.submit(getPage, chapter, p['value']))
+            futures.append(executor.submit(getPage, chapter, p['value'], index))
             printer.submit(increaseStarted)
     except:
         printer.submit(print_t, "Error fetching Chapter " + chapter)
 
 
 def removeImageIfCorrupted(path):
+    img = type('Image', (), {})()
     try:
         img = Image.open(path)
         img.load()
+        img.close()
     except FileNotFoundError:
         return
     except:
-        img.close()
+        try:
+            img.close()
+        except:
+            img = img
         os.remove(path)
 
 
-def getPage(chapter, page):
+def getPage(chapter, page, index):
     file = manga + "/Chapter" + chapter + "/Page" + page + ".png"
 
     removeImageIfCorrupted(file)
@@ -153,7 +168,10 @@ def getPage(chapter, page):
         return
 
     try:
-        url = html_stem + read_prefix + manga + chapter_prefix + chapter + page_prefix + page + html_suffix
+        url = html_stem + read_prefix + manga + chapter_prefix + chapter
+        if index is not -1:
+            url += index_prefix + str(index)
+        url += page_prefix + page + html_suffix
         html = requests.get(url, timeout=60).content
         page_soup = BeautifulSoup(html, "lxml")
         image_url = page_soup.find("img", {"class": image_class}, src=True)['src']
