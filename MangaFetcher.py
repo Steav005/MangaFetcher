@@ -146,16 +146,14 @@ def getChapter(chapter, href):
 def removeImageIfCorrupted(path):
     img = type('Image', (), {})()
     try:
-        img = Image.open(path)
-        img.load()
-        img.close()
+        with open(str(path), 'rb') as f:
+            img = Image.open(f)
+            img.load()
+            del img
     except FileNotFoundError:
         return
     except:
-        try:
-            img.close()
-        except:
-            img = img
+        del img
         os.remove(path)
 
 

@@ -8,6 +8,7 @@
 *.jpeg
 *.epub
 *.mobi
+*.mobi*
 
 ### Kindlegen
 kindlegen.exe
